@@ -28,8 +28,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,12 +45,10 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun MovieScreen(onMovieClick: (MovieDto) -> Unit, viewModel: MoviesViewModel = koinViewModel()) {
-    val movies by viewModel.movies.observeAsState(emptyList())
-    val errorMessage by viewModel.error.observeAsState(null)
-    val isLoading by viewModel.isLoading.observeAsState(false)
+    val state by viewModel.uiState.collectAsState()
 
     LaunchedEffect(viewModel) {
-        viewModel.fetchPopularMovies()
+        viewModel.sendAction(MoviesAction.LoadMovies)
     }
 
     Scaffold(
@@ -59,17 +57,17 @@ fun MovieScreen(onMovieClick: (MovieDto) -> Unit, viewModel: MoviesViewModel = k
         }
     ) { padding ->
         when {
-            isLoading -> {
+            state.isLoading -> {
                 LoadingScreen()
             }
 
-            errorMessage != null -> {
-                ErrorScreen(onRetry = { viewModel.fetchPopularMovies() })
+            state.error != null -> {
+                ErrorScreen(onRetry = { viewModel.sendAction(MoviesAction.LoadMovies) })
             }
 
-            movies.isNotEmpty() -> {
+            else -> {
                 LazyColumn(modifier = Modifier.padding(padding)) {
-                    items(movies) { movie ->
+                    items(state.movieResponseDto.movies) { movie ->
                         MovieItem(Modifier.clickable { onMovieClick.invoke(movie) }, movie)
                     }
                 }
