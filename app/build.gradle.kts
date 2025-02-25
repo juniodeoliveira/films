@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.mockito)
     implementation(libs.coroutines.test )
     implementation(libs.arch.core.test)
+    implementation(libs.mockk)
 
     ksp(libs.koin.ksp.compiler)
 
